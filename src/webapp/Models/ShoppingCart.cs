@@ -3,15 +3,20 @@ using System.Linq;
 
 namespace dotnetfashionassistant.Models
 {
+    public class CartSummary
+    {
+        public List<CartItem> Items { get; set; } = new();
+        public decimal TotalCost { get; set; }
+    }
+    
     public class CartItem
     {
         public int ProductId { get; set; }
         public required string ProductName { get; set; }
         public required string Size { get; set; }
         public int Quantity { get; set; }
-    }
-
-    public static class CartService
+        public decimal Price { get; set; }
+    }    public static class CartService
     {
         // In-memory cart storage - in a real application, this would use session state or a database
         private static readonly List<CartItem> Cart = new();
@@ -23,11 +28,24 @@ namespace dotnetfashionassistant.Models
         {
             return Cart;
         }
-
+        
         /// <summary>
+        /// Gets the cart summary including items and total cost
+        /// </summary>
+        /// <returns>A CartSummary containing items and total cost</returns>
+        public static CartSummary GetCartSummary()
+        {
+            decimal totalCost = Cart.Sum(item => item.Quantity * item.Price);
+            
+            return new CartSummary
+            {
+                Items = Cart,
+                TotalCost = totalCost
+            };
+        }/// <summary>
         /// Adds an item to the cart or increases quantity if it already exists
         /// </summary>
-        public static void AddToCart(int productId, string productName, string size, int quantity)
+        public static void AddToCart(int productId, string productName, string size, int quantity, decimal price)
         {
             // Check if the item already exists in the cart with the same product ID and size
             var existingItem = Cart.FirstOrDefault(item => item.ProductId == productId && item.Size == size);
@@ -45,7 +63,8 @@ namespace dotnetfashionassistant.Models
                     ProductId = productId,
                     ProductName = productName,
                     Size = size,
-                    Quantity = quantity
+                    Quantity = quantity,
+                    Price = price
                 });
             }
         }
